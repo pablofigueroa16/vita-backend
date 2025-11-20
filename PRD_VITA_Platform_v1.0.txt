@@ -1,0 +1,114 @@
+Documento de Requerimiento de Producto (PRD) – VITA Platform
+Versión: 1.0
+Fecha: 11/08/2025
+Responsable: Victor Corvalán – CEO & Founder
+
+Objetivo: Definir los módulos clave, funcionalidades y limitaciones de la versión gratuita y profesional (Pro) de VITA para lanzamiento y escalabilidad.
+
+1. Visión General
+VITA será la primera plataforma Lifeware que integra en un solo ecosistema:
+● Chat con AI para clientes y usuarios.
+● CRM potenciado por AI que sugiere próximos pasos de ventas y relacionamiento.
+● Creación de comunidades y contenido al estilo TikTok y YouTube.
+● Tiendas online instantáneas con conexión directa a pasarela de pagos y tarjeta virtual.
+● Marketplace de productos preseleccionados.
+● Monetización en livestream y contenido pregrabado.
+Todo sin salir de la app, sin dominios externos, sin contratar programadores, y disponible en modelo Freemium + Pro.
+
+2. Prioridades de Desarrollo
+1) Chat con AI
+○ Resumen automático de conversaciones con clientes.
+○ Generación de respuestas rápidas y personalizadas según contexto.
+○ Histórico inteligente para seguimiento de interacciones.
+○ Multi-idioma automático.
+
+2) CRM con AI (referencia: gpt4sales.ai)
+○ Resumen de intereses del cliente y su histórico.
+○ Sugerencias de próximos pasos (follow-ups, promociones, llamadas).
+○ Integración con chat, publicaciones y ventas para un perfil 360°.
+○ Segmentación automática de clientes por interés y comportamiento.
+
+3) Comunidades y Contenido
+○ Creación de grupos privados y públicos.
+○ Publicaciones estilo TikTok (verticales cortas).
+○ Playlist de contenido (vertical y horizontal) hasta 15 minutos por video.
+○ Función de livestream con chat en vivo.
+○ Posibilidad de vender productos durante el livestream.
+○ Donaciones disponibles en videos pregrabados y en vivo.
+
+4) Tiendas Instantáneas
+○ Creación de múltiples tiendas en minutos (sin programadores).
+○ Catálogo visual estilo WhatsApp Business.
+○ Conexión directa a pasarela de pagos (Cregis) y tarjeta virtual.
+○ Sin necesidad de dominio externo.
+○ Link automático predeterminado por VITA para compartir la tienda.
+○ Procesamiento de pagos con comisiones bajas + emisión de tarjeta VISA virtual.
+
+5) Marketplace VITA
+○ Productos y servicios preseleccionados de alta calidad.
+○ Filtrado por categoría y reputación.
+○ Opciones destacadas y sugeridas por AI.
+
+3. Modelo de Monetización
+Versión Gratis
+● Hasta 3 tiendas por usuario.
+● Máximo 5 productos por tienda.
+● Comisiones estándar del mercado.
+● Acceso básico a chat AI y CRM AI (resumen + respuesta sugerida).
+
+Versión Pro (Ilimitada)
+● Tiendas ilimitadas.
+● Productos ilimitados por tienda.
+● Comisiones reducidas (competitivas vs mercado).
+● Tarjeta VISA virtual incluida.
+● Funcionalidades AI avanzadas (predicción de ventas, segmentación automática, plantillas de respuestas, informes avanzados).
+● Soporte prioritario 24/7.
+● Acceso anticipado a nuevas funciones.
+
+4. Experiencia de Usuario – Flujo Clave
+1) Usuario se registra → Completa KYC (DIDIT).
+2) Elige perfil emprendedor → Se habilita módulo “Tiendas”.
+3) Selecciona “Crear Tienda” → Define nombre, categoría, sube fotos y precios.
+4) La tienda obtiene link automático vita.com/usuario/tienda.
+5) Puede compartir en redes, chats, QR o dentro de la app.
+6) Ventas procesadas directamente en wallet VITA → fondos disponibles vía Cregis y tarjeta VISA.
+7) CRM AI registra clientes, compras y sugiere próximos pasos.
+
+5. Especificaciones Técnicas
+● Integraciones:
+○ KYC/KYB (DIDIT).
+○ Pasarela Cregis API (pagos, wallet, tarjeta VISA virtual).
+● Infraestructura:
+○ Escalable en microservicios.
+○ Base de datos centralizada para perfiles, tiendas, productos y transacciones.
+● IA:
+○ Motor GPT integrado para chat, CRM y sugerencias de contenido.
+○ Entrenamiento personalizado en datos de cada usuario/empresa.
+● Video & Streaming:
+○ Servidores con soporte para transmisión en vivo y videos hasta 15 min.
+○ Compatibilidad con vertical/horizontal.
+
+6. Roadmap Tentativo
+Fase 1 – Core (0-3 meses):
+○ Registro + KYC con DIDIT + KYB con sistema propio
+○ Tiendas ( ilimitadas para la fase 1)
+○ Conexión Cregis
+○ Conexión Stripe
+○ Marketplace inicial
+○ Arquitectua en terraform
+○ Un método de envió disponible por país (Chile, Colombia, México, España y Dubái)
+○ Subir productos a través de un Excel o similar
+
+Fase 2 – Contenido (3-6 meses):
+○ CRM AI básico
+○ Chat AI básico
+○ Publicaciones TikTok-like
+○ Playlist estilo YouTube
+○ Livestream con ventas
+○ Donaciones en videos
+
+Fase 3 – AI Avanzada y Escalabilidad (6-12 meses):
+○ CRM AI predictivo
+○ Segmentación inteligente
+○ Comisiones reducidas Pro
+○ Expansión Marketplace
