@@ -1,0 +1,59 @@
+📈 Patrones de uso esperados:
+- Chat AI: Alta frecuencia, baja latencia
+- Streaming: Picos intensos, ancho de banda
+- Pagos: Transaccional, alta consistencia
+- Marketplace: Lectura intensiva, cacheable
+- KYC: Esporádico, procesamiento pesado
+
+Tecnologías Específicas
+- AI Services: Python + TensorFlow/PyTorch
+- Payments: Node.js + alta seguridad
+- Streaming: Go + baja latencia
+- Web Services: TypeScript + Express
+### Orquestación:
+- ECS Fargate - Servicios stateful
+- Lambda - Event-driven functions
+- API Gateway - Routing y rate limiting
+### Comunicación:
+- REST APIs - Comunicación síncrona
+- SQS/SNS - Eventos asíncronos
+- EventBridge - Event routing
+### Datos:
+- Aurora PostgreSQL - Datos transaccionales
+- DynamoDB - Chat history, eventos
+- Redis - Cache y sesiones
+
+1. 🔐 Auth Service - Cognito + Claims personalizados
+2. 📋 KYC Service - Integración DIDIT + Webhooks
+3. 🏢 KYB Service - Verificación de negocios
+4. 🏪 Stores Service - Gestión de tiendas
+5. 📦 Products Service - Catálogo y inventario
+6. 🛒 Orders Service - Procesamiento de órdenes
+7. 💳 Payments Service - Cregis + Stripe + Wallet
+8. 🛍️ Marketplace Service - Catálogo
+9. 🤖 Chat AI Service - GPT + Historial
+10. 📊 CRM AI Service - Analytics + Predicciones
+11. 📹 Content Service - VOD + Media processing
+12. 📡 Livestream Service - IVS + Chat en vivo
+13. 👥 Community Service - Grupos + Social features
+14. 📋 Plans Service - Límites Free/Pro
+
+✅ Implementar inmediatamente:
+- Auth Service (base para todo)
+- KYC Service (compliance crítico)
+- Stores Service (core business)
+- Products Service (catálogo)
+- Payments Service (monetización)
+- Plans Service (freemium)
+
+📈 Agregar gradualmente:
+- Chat AI Service
+- CRM AI Service
+- Content Service
+- Community Service
+
+🎯 Completar ecosistema:
+- Livestream Service
+- Marketplace Service (expandido)
+- Analytics Service
+- Notification Service

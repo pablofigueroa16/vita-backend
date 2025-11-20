@@ -1,0 +1,240 @@
+Arquitectura de Referencia AWS – VITA (Basada en mejores prácticas del artículo de Rootstrap y alineada a PRD V1.0)
+
+Resumen ejecutivo
+- Objetivo: Definir una arquitectura escalable, confiable y coste-eficiente para VITA (mobile-first), soportando Chat/CRM con AI, Tiendas instantáneas, Marketplace, Contenido (VOD) y Livestream, con integraciones KYC (DIDIT) y pagos/wallet (Cregis).
+- Enfoque: Servicios administrados, baja latencia para streaming, autenticación administrada y orquestación por eventos.
+- Alineación con blog de referencia: uso de Amazon Cognito para autenticación (incluye social login), y aprovechamiento de la red de AWS para reducir la latencia de streaming. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
+
+Decisiones clave (alineadas al artículo de referencia)
+- Autenticación y social login: Amazon Cognito (User Pools + Federated IdP, ej. Google) para registro, login, MFA opcional, recuperación de contraseña y autenticación de APIs. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
+- API auth: Integración de Cognito con API Gateway Authorizers (Bearer JWT) para proteger microservicios y rutas críticas. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
+- Latencia de streaming: Aprovechar la infraestructura de red de AWS (CloudFront + IVS) para minimizar latencia en video en vivo. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
+
+1) Vista lógica (alto nivel)
+┌──────────────── Internet ────────────────┐
+│ Clientes: Web (PWA) y Móvil (RN)         │
+└───────────────┬──────────────────────────┘
+                │
+          ┌─────▼─────┐     ┌─────────────┐       ┌───────────────────────────┐
+          │  Route 53 │────►│   AWS WAF   │──────►│ CloudFront (HTTP/3, CDN)  │
+          └───────────┘     └─────────────┘       └─────────────┬─────────────┘
+                                                                │
+                         ┌──────────────────────┬────────────────┼──────────────────┬─────────────────┐
+                         │                      │                │                  │                 │
+                ┌────────▼─────────┐   ┌────────▼────────┐  ┌───▼─────────┐  ┌────▼──────────┐  ┌───▼───────────┐
+                │ Frontend (SSR/   │   │ API Gateway     │  │  IVS Live   │  │  S3 + CF VOD  │  │ AuthN/AuthZ   │
+                │ ISR con Amplify  │   │ (REST/HTTP)     │  │ (stream)    │  │ (MediaConvert)│  │ Amazon Cognito│
+                └────────┬─────────┘   └────────┬────────┘  └─────────────┘  └───────────────┘  └───────────────┘
+                         │                      │
+                 ┌───────▼───────┐      ┌───────▼─────────────────────────────────────────────────────────────┐
+                 │ Edge/Lambda@  │      │ Microservicios (ECS Fargate y/o Lambda)                             │
+                 │ Edge (SSR)    │      │ - Auth Svc (tokens app, claims de plan)                             │
+                 └───────────────┘      │ - KYC Svc (DIDIT) | - Payments Svc (Cregis)                         │
+                                        │ - Plan/Limits Svc (Freemium/Pro)                                    │
+                                        │ - Stores/Products/Orders Svc                                        │
+                                        │ - Chat AI Svc | - CRM AI Svc | - Community/Content Svc              │
+                                        │ - Livestream Svc (IVS hooks) | - Marketplace Svc                    │
+                                        └───────────┬─────────────────────────────────────────────────────────┘
+                                                    │
+                                  ┌─────────────────▼─────────────────────────────────────────────────────────┐
+                                  │ Capa de Datos                                                             │
+                                  │ - Aurora PostgreSQL (OLTP: usuarios, perfiles, tiendas, productos, trx)   │
+                                  │ - DynamoDB (chat history, eventos interacciones, analíticas near-real)    │
+                                  │ - MemoryDB Redis (caché, sesiones server, rate limiting, colas livianas)  │
+                                  │ - S3 (media, VOD), MediaConvert (transcod.), IVS (live), CloudFront (CDN) │
+                                  │ - SQS/SNS (eventos asíncronos), Kinesis (telemetría/streams si aplica)    │
+                                  │ - Secrets Manager / IAM (secretos, permisos mínimos)                      │
+                                  └───────────────────────────────────────────────────────────────────────────┘
+
+2) Frontend (Mobile-first con Next.js 13+ App Router)
+- Hosting y entrega: Amplify Hosting para SSR/ISR con CloudFront, estáticos en S3; PWA con Service Worker y next/image optimizado.
+- Rutas híbridas:
+  - SSG: landing y marketplace público.
+  - ISR: páginas de tienda y productos (revalidación 60–300s).
+  - SSR: dashboards autenticados (Chat/CRM/Orders).
+- Autenticación en cliente:
+  - Login/registro/MFA/social con Cognito Hosted UI o SDK; tokens almacenados en cookies HttpOnly + CSRF para POST. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
+- Integración API:
+  - Base https://api.vita.com tras CloudFront → API Gateway → microservicios.
+  - Autorización: JWT Cognito (Authorizers) + claims de plan (Free/Pro) en cabeceras/claims.
+- Observabilidad UX: CloudWatch RUM, métricas Web Vitals (LCP, CLS, TTFB), alarms p95/p99.
+
+3) Backend (microservicios)
+- Pattern: servicios focalizados en dominios del PRD, con contratos claros y versionado.
+- Despliegue:
+  - ECS Fargate para servicios stateful/stateless de baja latencia o con dependencias nativas.
+  - Lambda para funciones event-driven (webhooks DIDIT/Cregis, tareas de short-running, cron).
+- Servicios:
+  - Auth Svc: orquesta claims propios (rol, plan, límites) complementando JWT de Cognito.
+  - KYC Svc: recibe webhooks de DIDIT y actualiza estado KYC del usuario (Aurora).
+  - Plan/Limits Svc: aplica límites Free/Pro (tiendas, productos, comisiones, features).
+  - Payments Svc: integra Cregis (pagos/wallet/VISA), ledger en Aurora, idempotencia.
+  - Stores/Products/Orders Svc: CRUDs, catálogos, ordenes, stock.
+  - Chat AI Svc: historial en DynamoDB, invocación a LLM, quick replies y resúmenes.
+  - CRM AI Svc: agrega interacciones/ventas, insights y próximos pasos.
+  - Community/Content Svc: posts cortos, playlists, VOD hasta 15 min (S3/MediaConvert).
+  - Livestream Svc: IVS channels/playback, chat y donaciones en vivo.
+  - Marketplace Svc: catálogo curado, filtros, ranking básico.
+- Integraciones externas:
+  - DIDIT (KYC/KYB) por webhooks → KYC Svc.
+  - Cregis (pagos, wallet, VISA) por webhooks → Payments Svc.
+- Observabilidad:
+  - CloudWatch logs/metrics + X-Ray traces, métricas negocio (DAU, conversión, AOV), alarmas.
+
+4) Datos y almacenamiento
+- Aurora PostgreSQL:
+  - Esquemas: users, profiles, kyc_status, stores, products, orders, transactions, marketplace_items, plans, subscriptions, crm_entities.
+  - Índices por acceso mobile/tienda y particionado temporal en tablas de eventos financieros si corresponde.
+- DynamoDB:
+  - Tablas: chat_sessions, chat_messages (PK compuesta userId#sessionId + sortKey ts), analytics_events (PK tenantId + ts).
+  - Streams → Lambda para ETL hacia S3/athena si se requiere análisis.
+- MemoryDB (Redis):
+  - Claves: session:<id>, cache:<resourceKey>, rate:<ip|userId>, locks y colas efímeras.
+- Media:
+  - S3 buckets versionados con políticas de acceso mínimo, MediaConvert para transcodificación, CloudFront para distribución.
+  - IVS para transmisión en vivo de baja latencia con playback seguro.
+- Mensajería:
+  - SQS (cola de órdenes, eventos de pagos, notificaciones), SNS (fan-out para email/push).
+
+5) Seguridad y cumplimiento
+- AWS WAF con reglas gestionadas OWASP, rate-limit y listas de control.
+- Cognito para autenticación de usuarios y federación social; MFA opcional y password policies. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
+- API Gateway + Cognito Authorizers (JWT) y políticas IAM por entorno. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
+- Secrets en Secrets Manager/SSM; KMS para cifrado at-rest; TLS 1.2+.
+- Principio de privilegio mínimo (IAM) y segmentación por cuentas/entornos.
+- Auditoría y cumplimiento: CloudTrail, Config, registros de acceso S3/CF.
+
+6) Rendimiento, escalado y costos
+- Frontend:
+  - Edge caching agresivo para estáticos; ISR para contenido semidinámico; SSR solo cuando aporte valor.
+- Backend:
+  - Auto Scaling en ECS/Lambda por métricas (RPS, CPU, latencia p95).
+  - Redis para reducir TTFB de endpoints calientes y rate limiting global.
+- Datos:
+  - Aurora Serverless v2 para elasticidad de cargas variables.
+  - DynamoDB on-demand o provisioned con autoscaling y DAX opcional si hay hot keys.
+- Media/Streaming:
+  - IVS para live; MediaConvert por demanda para VOD.
+- Optimización:
+  - Right-sizing de tareas, Savings Plans/Compute SP; Graviton cuando sea viable.
+
+7) Flujos clave (alineados al PRD)
+- Registro/KYC:
+  1) Usuario se registra/autentica en Cognito; Auth Svc crea perfil y plan Free (claims). <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
+  2) DIDIT envía webhook a KYC Svc → actualiza kyc_status en Aurora y notifica al usuario.
+- Planes Free/Pro:
+  - Plan/Limits Svc impone límites (tiendas, productos) server-side; UI muestra upsell.
+- Tiendas/Órdenes:
+  - CRUD en Stores/Products/Orders Svc; ISR para páginas públicas; checkout via Cregis.
+- Pagos y wallet:
+  - Cregis → webhook Payments Svc → ledger (Aurora), wallet y estado VISA virtual.
+- Chat/CRM AI:
+  - Chat guarda historial en DynamoDB, llama LLM para quick replies/resúmenes; CRM consume compras e interacciones para sugerencias.
+- Contenido:
+  - Subida a S3 → MediaConvert → CF para VOD; IVS para live con chat y donaciones.
+- Marketplace:
+  - Ítems curados; filtros y ranking básico; páginas públicas cacheadas.
+
+8) Diagrama general (actualizado)
+┌──────────────── Internet ────────────────┐
+│ PWA Web / App Móvil (RN)                 │
+└───────────────┬──────────────────────────┘
+                │
+          ┌─────▼─────┐     ┌─────────────┐       ┌───────────────────────────┐
+          │  Route 53 │────►│   AWS WAF   │──────►│ CloudFront (HTTP/2/3)     │
+          └───────────┘     └─────────────┘       └─────────────┬─────────────┘
+                                                                │
+                   ┌───────────────────────┬────────────────────┼───────────────────┬──────────────────┐
+                   │                       │                    │                   │                  │
+          ┌────────▼────────┐     ┌────────▼────────┐    ┌──────▼───────┐   ┌──────▼─────────┐  ┌─────▼─────┐
+          │ Amplify (SSR/   │     │ API Gateway     │    │    IVS       │   │  S3 + CF (VOD) │  │ Cognito   │
+          │ ISR + S3 estát.)│     │ + Authorizers   │    │ (Livestream) │   │  + MediaConv   │  │ (AuthN/Z) │
+          └────────┬────────┘     └────────┬────────┘    └──────────────┘   └─────────────-──┘  └───────────┘
+                   │                      ┌┴──────────-────────────────────────────────────────────────────┐
+                   │                      │       Microservicios (ECS/Lambda):                             │
+                   │                      │ Auth, KYC, Plan/Limits, Stores/Products/Orders, Payments,      │
+                   │                      │ Chat AI, CRM AI, Community/Content, Livestream, Marketplace    │
+                   │                      └─────────┬──────────────────────────────────────────────────────┘
+                   │                                │
+                   │     ┌──────────────────────────▼────────────────────────────────────────────────────┐
+                   │     │ Datos: Aurora PG, DynamoDB, MemoryDB, S3, SQS/SNS, Kinesis, Secrets/IAM       │
+                   │     └───────────────────────────────────────────────────────────────────────────────┘
+                   │
+         Integraciones externas: DIDIT (KYC/KYB), Cregis (pagos/wallet/VISA) por webhooks seguros
+
+9) Diagrama de Frontend (detalle)
+┌──────────────── Internet ────────────────┐
+│ Usuario Web/Móvil (PWA)                  │
+└───────────────┬──────────────────────────┘
+                │
+          ┌─────▼─────┐     ┌─────────────┐      ┌───────────────────────────────────────────┐
+          │  Route 53 │────►│   AWS WAF   │─────►│ CloudFront (Edge Cache, TLS, HTTP/3)      │
+          └───────────┘     └─────────────┘      └─────────────┬─────────┬───────────────────┘
+                                                                │         │
+                                                   ┌────────────▼───┐ ┌───▼───────────-─┐
+                                                   │ Origin Amplify │ │ Origin estático │
+                                                   │ (SSR/ISR)      │ │ S3 (/_next, img)│
+                                                   └───────────┬────┘ └───────--────────┘
+                                                               │
+                                                         ┌─────▼─────┐
+                                                         │ Next.js   │
+                                                         │ SSR/ISR   │
+                                                         └─────┬─────┘
+                                                               │  fetch https://api.vita.com
+                                                               ▼
+                                                        API Gateway (+ JWT Cognito)
+
+10) Diagrama de Backend (detalle)
+                    ┌─────────────────────────────────────────────┐
+                    │         CloudFront (API Origin)             │
+                    └───────────────────────┬─────────────────────┘
+                                            │
+                                     ┌──────▼──────┐
+                                     │ API Gateway │
+                                     └──────┬──────┘
+                                            │  Cognito JWT Authorizer
+     ┌────────────────────────┬─────────────┼───────────────┬──────────────────────────┬──────────────────────┐
+     │                        │             │               │                          │                      │
+┌────▼─────┐            ┌─────▼────┐  ┌─────▼──────┐  ┌────▼───-───┐           ┌───────▼────────┐     ┌──────▼───────┐
+│ Auth Svc │            │ KYC Svc  │  │ Plan/Limits│  │ Stores/    │           │ Payments Svc   │     │ Marketplace  │
+│ (claims) │◄─DIDIT───► │(webhook) │  │  Svc       │  │ Products   │           │ (Cregis, VISA) │     │   Svc        │
+└────┬─────┘            └────┬─────┘  └─────┬──────┘  └────┬───────┘           └───────┬────────┘     └──────┬───────┘
+     │                       │              │              │                          webhooks               │
+┌────▼─────┐   ┌──────────┐  │   ┌──────────┐  ┌──────────▼───┐    ┌─────────-──┐     ┌────────────┐   ┌──────────▼───┐
+│ Chat AI  │   │ CRM AI   │  │   │Community │  │ Content/VOD  │    │ Livestream │     │ Notify Svc │   │ Webhooks In  │
+│  Svc     │   │  Svc     │  │   │  Svc     │  │  Svc (S3/MC) │    │  Svc (IVS) │     │ (SNS/SES)  │   │ (DIDIT/      │
+└────┬─────┘   └────┬─────┘  │   └────┬─────┘  └──────────┬───┘    └───────┬────┘     └────────────┘   │  Cregis)     │
+     │              │        │        │                   │                │                           └──────────────┘
+     │              │        │        │                   │                │
+     │        ┌─────▼────┐  │   ┌────▼────┐   ┌──────────▼───┐     ┌──────▼────┐      ┌────────────┐   ┌───────────┐
+     │        │ Aurora   │  │   │DynamoDB │   │ MemoryDB     │     │   S3      │      │   SQS/SNS  │   │ Secrets   │
+     │        │PostgreSQL│  │   │(chat/ev)│   │ Redis        │     │ (media)   │      └────────────┘   │ / IAM     │
+     │        └──────────┘  │   └─────────┘   └──────────────┘     └───────────┘                       └───────────┘
+
+11) Implementación por etapas (0–3 meses – Core)
+- Semana 1–3:
+  - Cognito (User Pool, dominios Hosted UI, Google IdP), API Gateway Authorizers, WAF base. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
+  - Aurora PG inicial, DynamoDB tablas chat/analytics, S3 buckets media.
+  - Amplify + Next.js SSR/ISR; dominios en Route 53 + certificados (ACM).
+- Semana 4–6:
+  - KYC Svc (webhooks DIDIT), Payments Svc (webhooks Cregis).
+  - Stores/Products/Orders Svc + Plan/Limits Svc (Free/Pro).
+  - Chat AI Svc + CRM AI Svc (MVP).
+- Semana 7–12:
+  - VOD pipeline (S3 + MediaConvert + CF), IVS canales para live básico.
+  - Marketplace Svc y páginas públicas (SSG/ISR).
+  - Observabilidad (CloudWatch, X-Ray), alarmas p95, dashboards producto.
+
+12) Consideraciones de coherencia con PRD y archivo Arquitectura.txt
+- Conserva los módulos y flujos ya definidos (KYC DIDIT, Cregis, Free/Pro, Chat/CRM AI, Tiendas, Marketplace, VOD y Livestream), y los refuerza con:
+  - Cognito como capa de autenticación administrada y social login (Google) para reducir complejidad y acelerar time-to-market. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
+  - Uso de la red global de AWS (CloudFront + IVS) para minimizar latencia en streaming. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
+- Mantiene la separación de datos (Aurora vs DynamoDB) y el caching/colas con MemoryDB Redis, coherente con los objetivos de rendimiento del PRD.
+
+13) Notas de seguridad y operación
+- Hardening: CSP estricta, HSTS, cookies Secure/HttpOnly/SameSite; escaneo OWASP en WAF.
+- Backups y DR: snapshots de Aurora, versioning en S3, replicación multi-AZ; pruebas de restore trimestrales.
+- Gestión de entornos: cuentas por ambiente (dev, staging, prod), CI/CD con validaciones (infra como código).
+- Costos: monitorear top servicios (CF egress, IVS horas, MediaConvert jobs, DynamoDB RCU/WCU), alertas por presupuesto.
+
+Este documento sirve como base para IaC (Terraform/CDK) y guías de implementación de servicios, priorizando autenticación con Cognito, entrega global con CloudFront y streaming con IVS, en línea con el enfoque del artículo de Rootstrap. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
