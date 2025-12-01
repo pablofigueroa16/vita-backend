@@ -90,14 +90,76 @@ Versión Pro (Ilimitada)
 
 6. Roadmap Tentativo
 Fase 1 – Core (0-3 meses):
-○ Registro + KYC con DIDIT + KYB con sistema propio
-○ Tiendas ( ilimitadas para la fase 1)
-○ Conexión Cregis
-○ Conexión Stripe
-○ Marketplace inicial
-○ Arquitectua en terraform
-○ Un método de envió disponible por país (Chile, Colombia, México, España y Dubái)
-○ Subir productos a través de un Excel o similar
+
+MÓDULO DE IDENTIDAD:
+○ Registro + KYC con DIDIT (clientes y creadores)
+○ KYB con DIDIT (empresas/marcas - obligatorio para recibir pagos)
+○ Tags visuales de verificación (🔵 Usuario, 🟢 Empresa, 🟣 Creador)
+○ Estados de verificación vía webhooks (aprobado/rechazado/pendiente)
+○ Sin identidad verificada = sin cobro, sin referidos, sin reservas
+
+SISTEMA DE REFERIDOS:
+○ Sistema de afiliación nativa para creadores
+○ Tracking por ID interno + device fingerprinting
+○ Split automático de comisiones (Marca/Creador/Vita)
+○ Panel de afiliado con ventas, comisiones y productos activos
+
+SISTEMA DE RESERVAS AVANZADO:
+○ Calendario avanzado por staff con disponibilidad por servicio
+○ Duración variable, días especiales, bloqueos inteligentes
+○ Pagos integrados (depósito o total)
+○ Confirmación automática, reagendamiento y cancelación
+○ Recomendación Inteligente de Horarios (IA)
+○ Reservas con AI Chat Assistant
+○ Vista operativa tipo agenda profesional
+○ Sincronización externa (Google Calendar - Stage 1.5)
+
+INTEGRACIONES DE PAGO:
+○ Conexión Stripe (MVP)
+○ Conexión Cregis (crypto + fiat)
+○ Pagos únicos y de reserva (depósito)
+○ Split automático entre Marca/Creador/Vita
+
+FEED SOCIAL:
+○ Videos cortos estilo TikTok
+○ Imágenes y texto corto
+○ Scrolling vertical
+○ Algoritmo basado en ubicación y marcas verificadas
+○ Like, Save, Share básico
+○ Captions automáticos IA (opcional)
+
+MARKETPLACE:
+○ Marketplace basado en ubicación (ciudad, zona, distancia)
+○ Vista Grid tipo Uber Eats
+○ Filtrado por servicios, comercios, verificados, promociones
+
+PERFILES:
+○ Perfiles de marcas, creadores y clientes
+○ Componentes: foto, portada, bio, productos/servicios
+○ Calendario de reservas integrado
+○ Feed propio por marca
+○ Botones: Reservar, Comprar, Recomendar
+○ Reviews básicas
+
+CHECKOUT INVISIBLE:
+○ One Tap Checkout (1 toque, 1 segundo)
+○ Tokenización PCI
+○ 3DS silencioso
+○ Fingerprinting del dispositivo
+○ Background processing de órdenes
+
+CHAT IA:
+○ Recomendación de servicios y tiendas
+○ Integración con ChatGPT o modelo propio
+○ Búsqueda inteligente por ubicación
+○ Respuestas con tarjetas de negocios
+○ Botones directos para reservar/comprar
+
+OTROS:
+○ Arquitectura en Terraform
+○ Palomita de verificación para marcas y creadores
+○ Un método de envío disponible por país (Chile, Colombia, México, España y Dubái)
+○ Subir productos a través de Excel o similar
 
 Fase 2 – Contenido (3-6 meses):
 ○ CRM AI básico

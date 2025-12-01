@@ -122,8 +122,6 @@ Decisiones clave (alineadas al artículo de referencia)
 - Registro/KYC:
   1) Usuario se registra/autentica en Cognito; Auth Svc crea perfil y plan Free (claims). <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
   2) DIDIT envía webhook a KYC Svc → actualiza kyc_status en Aurora y notifica al usuario.
-- Planes Free/Pro:
-  - Plan/Limits Svc impone límites (tiendas, productos) server-side; UI muestra upsell.
 - Tiendas/Órdenes:
   - CRUD en Stores/Products/Orders Svc; ISR para páginas públicas; checkout via Cregis.
 - Pagos y wallet:
@@ -226,7 +224,7 @@ Decisiones clave (alineadas al artículo de referencia)
   - Observabilidad (CloudWatch, X-Ray), alarmas p95, dashboards producto.
 
 12) Consideraciones de coherencia con PRD y archivo Arquitectura.txt
-- Conserva los módulos y flujos ya definidos (KYC DIDIT, Cregis, Free/Pro, Chat/CRM AI, Tiendas, Marketplace, VOD y Livestream), y los refuerza con:
+- Conserva los módulos y flujos ya definidos (KYC DIDIT, CregisW, Chat/CRM AI, Tiendas, Marketplace, VOD y Livestream), y los refuerza con:
   - Cognito como capa de autenticación administrada y social login (Google) para reducir complejidad y acelerar time-to-market. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
   - Uso de la red global de AWS (CloudFront + IVS) para minimizar latencia en streaming. <mcreference link="https://www.rootstrap.com/blog/architecting-a-social-network-on-aws" index="1">1</mcreference>
 - Mantiene la separación de datos (Aurora vs DynamoDB) y el caching/colas con MemoryDB Redis, coherente con los objetivos de rendimiento del PRD.
