@@ -11,141 +11,399 @@ datasource db {
 // ============================================
 
 model User {
-  id                    String    @id @default(uuid())
-  cognitoUserId         String    @unique
-  username              String    @unique
-  email                 String    @unique
-  phone                 String?
-  
-  // Roles y permisos
-  role                  UserRole  @default(CLIENT)
-  
-  // Verificación
-  verificationStatus    VerificationStatus @default(PENDING)
-  verificationBadge     Badge     @default(USER)
-  
-  // Device tracking
-  deviceFingerprint     String?
-  
+  id            String  @id @default(uuid())
+  cognitoUserId String  @unique
+  email         String  @unique
+  firstName     String?
+  lastName      String?
+  phone         String?
+
+  // Roles
+  role UserRole @default(USER)
+
+  // Estados de verificación
+  kycStatus  KYCStatus @default(NOT_VERIFIED)
+  kybStatus  KYBStatus @default(NOT_VERIFIED)
+  isVerified Boolean   @default(false) // true cuando KYC/KYB aprobado
+
+  // Device tracking para checkout invisible y afiliados
+  deviceFingerprint String?
+
   // Timestamps
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  lastLogin             DateTime?
-  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  lastLogin DateTime?
+
   // Relaciones
-  kycVerification       KYCVerification?
-  
+  profile         UserProfile?
+  kycVerification KYCVerification?
+  kybVerification KYBVerification?
+  affiliateLinks  AffiliateLink[]
+  transactions    Transaction[]
+  payoutRequests  PayoutRequest[]
+
+  @@index([email])
+  @@index([cognitoUserId])
+  @@index([role])
+  @@index([kycStatus])
+  @@index([kybStatus])
   @@map("users")
 }
 
 enum UserRole {
-  CLIENT        // cliente normal
-  CREATOR       // creador de contenido
-  BRAND_ADMIN   // administrador de marca
-  ADMIN         // admin de plataforma
-}
-
-enum VerificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  IN_REVIEW
-}
-
-enum Badge {
-  USER
-  CREATOR
-  BRAND
+  USER // Usuario normal/cliente
+  CREATOR // Creador de contenido (monetiza con afiliados)
+  BUSINESS // Empresa/Marca (vende productos/servicios)
+  ADMIN // Administrador de plataforma
 }
 
 // ============================================
-// KYC VERIFICATION (Separada - DIDIT)
+// KYC VERIFICATION (DIDIT Integration)
 // ============================================
 
 model KYCVerification {
-  id                String    @id @default(uuid())
-  userId            String    @unique
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // DIDIT Integration
-  diditSessionId    String?   @unique
-  provider          String    @default("didit")
-  
+  diditSessionId       String? @unique
+  diditVerificationUrl String?
+  provider             String  @default("didit")
+
   // Estado y datos
-  status            KYCStatus @default(PENDING)
-  documentType      String?
-  documentNumber    String?
-  country           String?
-  
+  status         KYCStatus @default(PENDING)
+  documentType   String?
+  documentNumber String?
+  country        String?
+
+  // Retry mechanism
+  attempts      Int       @default(0)
+  lastAttemptAt DateTime?
+  maxAttempts   Int       @default(3)
+
   // Metadata (JSON con respuesta completa de DIDIT)
-  metadata          Json?
-  
+  metadata  Json?
+  documents Json? // Documentos verificados por DIDIT
+
   // Audit trail
-  submittedAt       DateTime?
-  approvedAt        DateTime?
-  rejectedAt        DateTime?
-  expiresAt         DateTime?
-  
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  
+  initiatedAt DateTime  @default(now())
+  submittedAt DateTime?
+  approvedAt  DateTime?
+  rejectedAt  DateTime?
+  expiresAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([status])
+  @@index([userId])
+  @@index([diditSessionId])
   @@map("kyc_verifications")
 }
 
 enum KYCStatus {
-  PENDING
-  IN_PROGRESS
-  APPROVED
-  REJECTED
-  EXPIRED
+  NOT_VERIFIED // Usuario recién creado
+  PENDING // Sesión DIDIT creada, esperando que usuario complete
+  IN_PROGRESS // Usuario completó formulario, DIDIT procesando
+  APPROVED // Verificación exitosa (🔵 tag visible)
+  REJECTED // Verificación fallida (puede reintentar)
+  EXPIRED // Sesión DIDIT expiró sin completar
 }
 
 // ============================================
-// KYB VERIFICATION (Separada - Manual)
+// KYB VERIFICATION (Sistema Propio - Revisión Manual)
 // ============================================
 
 model KYBVerification {
-  id                  String    @id @default(uuid())
-  
-  // Business info
-  businessName        String
-  businessType        String
-  taxId               String
-  country             String
-  
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Business information
+  businessName String
+  businessType BusinessType
+  taxId        String       @unique
+  country      String // ISO 3166-1 alpha-2
+
   // Legal representative
-  representativeName  String
-  representativeEmail String
-  representativePhone String
-  
-  // Documents (S3 URLs)
-  documents           Json      // Array de {type, url, uploadedAt}
-  
+  legalRepresentative Json // {firstName, lastName, documentType, documentNumber, position, email, phone}
+
+  // Documents (S3 URLs con metadata)
+  documents Json // Array de {type, s3Key, s3Url, fileName, fileSize, mimeType, uploadedAt}
+
   // Review process
-  status              KYBStatus @default(PENDING)
-  reviewNotes         String?
-  reviewedBy          String?   // Admin user ID
-  
-  provider            String    @default("internal")
-  
+  status      KYBStatus @default(PENDING)
+  reviewNotes String?   @db.Text
+  reviewedBy  String? // Admin user ID
+
   // Timestamps
-  submittedAt         DateTime?
-  reviewedAt          DateTime?
-  approvedAt          DateTime?
-  rejectedAt          DateTime?
-  
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  
+  initiatedAt DateTime  @default(now())
+  submittedAt DateTime? // Cuando se marca como listo para revisión
+  reviewedAt  DateTime?
+  approvedAt  DateTime?
+  rejectedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([status])
+  @@index([userId])
+  @@index([country])
+  @@index([businessType])
   @@map("kyb_verifications")
 }
 
 enum KYBStatus {
-  PENDING
-  UNDER_REVIEW
-  ADDITIONAL_INFO_REQUIRED
-  APPROVED
-  REJECTED
+  NOT_VERIFIED // Cuenta business sin KYB iniciado
+  PENDING // KYB iniciado, subiendo documentos
+  UNDER_REVIEW // Documentos completos, revisión en curso
+  APPROVED // Verificación exitosa (🟢 tag + puede recibir pagos)
+  REJECTED // Verificación fallida (con notas)
+  ADDITIONAL_INFO_REQUIRED // Se necesitan más documentos o aclaraciones
+}
+
+enum BusinessType {
+  LLC // Sociedad de Responsabilidad Limitada
+  CORPORATION // Corporación
+  SOLE_PROPRIETORSHIP // Propietario Único
+  PARTNERSHIP // Sociedad
+  COOPERATIVE // Cooperativa
+  NGO // ONG
+  OTHER // Otro
+}
+
+// ============================================
+// USER PROFILE (Perfil Extendido)
+// ============================================
+
+model UserProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Información personal adicional
+  bio        String? @db.Text
+  avatar     String? // URL de S3
+  coverImage String? // URL de S3
+
+  // Ubicación
+  country    String?
+  city       String?
+  address    String?
+  postalCode String?
+
+  // Redes sociales
+  socialLinks Json? // {instagram, tiktok, twitter, facebook, website}
+
+  // Preferencias
+  preferences Json? // Preferencias del usuario (notificaciones, idioma, etc)
+  metadata    Json? // Metadata adicional
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("user_profiles")
+}
+
+// ============================================
+// SISTEMA DE AFILIADOS (Referidos de Creadores)
+// ============================================
+
+model AffiliateLink {
+  id        String @id @default(uuid())
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  // Producto/Servicio afiliado
+  productId String? // ID del producto (referencia futura)
+  serviceId String? // ID del servicio (referencia futura)
+
+  // Código de afiliado único
+  affiliateCode String @unique
+
+  // Comisión (definida por la marca)
+  commissionPercentage Decimal @db.Decimal(5, 2) // ej: 15.50%
+
+  // Estadísticas
+  clicks        Int     @default(0)
+  conversions   Int     @default(0)
+  totalEarnings Decimal @default(0) @db.Decimal(10, 2)
+
+  // Estado
+  status AffiliateLinkStatus @default(ACTIVE)
+
+  // Timestamps
+  activatedAt      DateTime  @default(now())
+  deactivatedAt    DateTime?
+  lastClickAt      DateTime?
+  lastConversionAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([creatorId])
+  @@index([affiliateCode])
+  @@index([status])
+  @@index([productId])
+  @@index([serviceId])
+  @@map("affiliate_links")
+}
+
+enum AffiliateLinkStatus {
+  ACTIVE // Link activo
+  PAUSED // Pausado por el creador
+  DEACTIVATED // Desactivado permanentemente
+}
+
+// ============================================
+// TRANSACCIONES Y PAGOS
+// ============================================
+
+model Transaction {
+  id     String @id @default(uuid())
+  userId String // Usuario que realizó la compra
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Referencia de la orden
+  orderId String? @unique
+
+  // Montos
+  amount   Decimal @db.Decimal(10, 2)
+  currency String  @default("USD")
+
+  // Método de pago
+  paymentMethod         String // stripe, cregis, etc.
+  paymentProvider       String? // Provider específico
+  externalTransactionId String? // ID de transacción en el provider
+
+  // Split de comisiones (JSON)
+  splitDetails Json? // {brandAmount, creatorAmount, vitaAmount, affiliateCode}
+
+  // Tracking de afiliado
+  affiliateCode     String? // Si vino de un link de afiliado
+  deviceFingerprint String? // Para tracking
+
+  // Estado
+  status TransactionStatus @default(PENDING)
+
+  // Metadata adicional
+  metadata Json? // Información adicional de la transacción
+
+  // Timestamps
+  processedAt DateTime?
+  completedAt DateTime?
+  failedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([affiliateCode])
+  @@index([status])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+enum TransactionStatus {
+  PENDING // Pago iniciado
+  PROCESSING // Procesando
+  COMPLETED // Completado exitosamente
+  FAILED // Fallido
+  REFUNDED // Reembolsado
+  CANCELLED // Cancelado
+}
+
+// ============================================
+// TRACKING DE CLICKS DE AFILIADOS
+// ============================================
+
+model AffiliateClick {
+  id            String @id @default(uuid())
+  affiliateCode String
+
+  // Device tracking (sin cookies)
+  deviceFingerprint String
+  ipAddress         String?
+  userAgent         String?
+
+  // Referrer info
+  referrerUrl String?
+  landingPage String?
+
+  // Conversion tracking
+  converted     Boolean   @default(false)
+  convertedAt   DateTime?
+  transactionId String?
+
+  // Timestamps
+  clickedAt DateTime @default(now())
+  expiresAt DateTime // 30 días desde el click
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([affiliateCode])
+  @@index([deviceFingerprint])
+  @@index([clickedAt])
+  @@index([expiresAt])
+  @@index([converted])
+  @@map("affiliate_clicks")
+}
+
+// ============================================
+// SOLICITUDES DE PAGO (Payouts de Creadores)
+// ============================================
+
+model PayoutRequest {
+  id        String @id @default(uuid())
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id])
+
+  // Monto solicitado
+  amount   Decimal @db.Decimal(10, 2)
+  currency String  @default("USD")
+
+  // Método de pago preferido
+  paymentMethod  PaymentMethodType
+  paymentDetails Json? // {bankAccount, crypto wallet, etc}
+
+  // Estado
+  status      PayoutStatus @default(PENDING)
+  reviewedBy  String? // Admin ID que revisó
+  reviewNotes String?      @db.Text
+
+  // Timestamps
+  requestedAt DateTime  @default(now())
+  reviewedAt  DateTime?
+  approvedAt  DateTime?
+  paidAt      DateTime?
+  rejectedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([requestedAt])
+  @@map("payout_requests")
+}
+
+enum PaymentMethodType {
+  BANK_TRANSFER // Transferencia bancaria
+  CRYPTO // Criptomoneda
+  STRIPE // Stripe Connect
+  CREGIS // Cregis
+  OTHER // Otro método
+}
+
+enum PayoutStatus {
+  PENDING // Pendiente de revisión
+  UNDER_REVIEW // En revisión por admin
+  APPROVED // Aprobado, pendiente de pago
+  PAID // Pagado
+  REJECTED // Rechazado
+  CANCELLED // Cancelado por el creador
 }
