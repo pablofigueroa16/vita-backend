@@ -82,7 +82,6 @@ Crear el esquema de base de datos en `vita-backend/prisma/schema.prisma` con:
 - Modelo `User`: información básica del usuario
   - id, cognitoUserId, email, firstName, lastName
   - role: `USER` | `CREATOR` | `BUSINESS` | `ADMIN`
-  - plan: `FREE` | `PRO`
   - kycStatus: `NOT_VERIFIED` | `PENDING` | `IN_PROGRESS` | `APPROVED` | `REJECTED` | `EXPIRED`
   - kybStatus: `NOT_VERIFIED` | `PENDING` | `UNDER_REVIEW` | `APPROVED` | `REJECTED` | `ADDITIONAL_INFO_REQUIRED`
   - isVerified: Boolean (para tags visuales 🔵🟢🟣)
@@ -206,14 +205,13 @@ Crear `vita-backend/src/modules/auth/services/cognito.service.ts`:
 Crear `vita-backend/src/modules/auth/auth.service.ts`:
 
 - `register()`: orquesta registro en Cognito + creación de perfil en BD
-  - Plan inicial: `FREE`
   - Role inicial: `USER`
   - kycStatus: `NOT_VERIFIED`
   - kybStatus: `NOT_VERIFIED`
   - Captura deviceFingerprint para tracking
 
 - `login()`: valida credenciales con Cognito y genera JWT con claims personalizados
-  - Claims: userId, cognitoUserId, role, plan, kycStatus, kybStatus, isVerified
+  - Claims: userId, cognitoUserId, role, kycStatus, kybStatus, isVerified
   - Validación de estado (sin KYC = sin cobros, sin referidos)
 
 - `validateUser()`: validación para estrategia local
@@ -238,8 +236,8 @@ Crear `vita-backend/src/modules/auth/auth.service.ts`:
 
 - Manejo de claims personalizados:
   - role: `USER` | `CREATOR` | `BUSINESS` | `ADMIN`
-  - plan: `FREE` | `PRO`
-  - limits: según plan (tiendas, productos, comisiones, features)
+  - kycStatus, kybStatus: estados de verificación
+  - isVerified: tag de verificación visual
 
 ### 2.4 Auth Controller
 
@@ -1216,8 +1214,7 @@ Configurar logging con Winston en formato JSON:
   "userId": "user-id",
   "metadata": {
     "email": "user@example.com",
-    "role": "USER",
-    "plan": "FREE"
+    "role": "USER"
   }
 }
 ```
@@ -1251,7 +1248,6 @@ Configurar logging con Winston en formato JSON:
 - Cambios de estado KYC/KYB
 - Aprobaciones/rechazos de admin
 - Solicitudes de payout
-- Cambios de plan (Free → Pro)
 - Acciones administrativas críticas
 
 **Integración con CloudWatch:**
@@ -1267,7 +1263,6 @@ Configurar logging con Winston en formato JSON:
 1. **Auth Service** (Amazon Cognito + JWT propio)
    - Registro, login, refresh, profile
    - Roles: USER, CREATOR, BUSINESS, ADMIN
-   - Planes: FREE, PRO
    - Social login (Google)
 
 2. **KYC Service** (Integración DIDIT)
