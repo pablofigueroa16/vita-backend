@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// USUARIOS Y AUTENTICACIÓN
+// ============================================
+
+model User {
+  id                    String    @id @default(uuid())
+  cognitoUserId         String    @unique
+  username              String    @unique
+  email                 String    @unique
+  phone                 String?
+  
+  // Roles y permisos
+  role                  UserRole  @default(CLIENT)
+  
+  // Verificación
+  verificationStatus    VerificationStatus @default(PENDING)
+  verificationBadge     Badge     @default(USER)
+  
+  // Device tracking
+  deviceFingerprint     String?
+  
+  // Timestamps
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  lastLogin             DateTime?
+  
+  // Relaciones
+  kycVerification       KYCVerification?
+  
+  @@map("users")
+}
+
+enum UserRole {
+  CLIENT        // cliente normal
+  CREATOR       // creador de contenido
+  BRAND_ADMIN   // administrador de marca
+  ADMIN         // admin de plataforma
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IN_REVIEW
+}
+
+enum Badge {
+  USER
+  CREATOR
+  BRAND
+}
+
+// ============================================
+// KYC VERIFICATION (Separada - DIDIT)
+// ============================================
+
+model KYCVerification {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // DIDIT Integration
+  diditSessionId    String?   @unique
+  provider          String    @default("didit")
+  
+  // Estado y datos
+  status            KYCStatus @default(PENDING)
+  documentType      String?
+  documentNumber    String?
+  country           String?
+  
+  // Metadata (JSON con respuesta completa de DIDIT)
+  metadata          Json?
+  
+  // Audit trail
+  submittedAt       DateTime?
+  approvedAt        DateTime?
+  rejectedAt        DateTime?
+  expiresAt         DateTime?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([status])
+  @@map("kyc_verifications")
+}
+
+enum KYCStatus {
+  PENDING
+  IN_PROGRESS
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+// ============================================
+// KYB VERIFICATION (Separada - Manual)
+// ============================================
+
+model KYBVerification {
+  id                  String    @id @default(uuid())
+  
+  // Business info
+  businessName        String
+  businessType        String
+  taxId               String
+  country             String
+  
+  // Legal representative
+  representativeName  String
+  representativeEmail String
+  representativePhone String
+  
+  // Documents (S3 URLs)
+  documents           Json      // Array de {type, url, uploadedAt}
+  
+  // Review process
+  status              KYBStatus @default(PENDING)
+  reviewNotes         String?
+  reviewedBy          String?   // Admin user ID
+  
+  provider            String    @default("internal")
+  
+  // Timestamps
+  submittedAt         DateTime?
+  reviewedAt          DateTime?
+  approvedAt          DateTime?
+  rejectedAt          DateTime?
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  @@index([status])
+  @@map("kyb_verifications")
+}
+
+enum KYBStatus {
+  PENDING
+  UNDER_REVIEW
+  ADDITIONAL_INFO_REQUIRED
+  APPROVED
+  REJECTED
+}

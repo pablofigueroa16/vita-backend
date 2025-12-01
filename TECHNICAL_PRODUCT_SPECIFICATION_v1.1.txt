@@ -1,0 +1,372 @@
+📘 TECHNICAL PRODUCT SPECIFICATION — VITA PLATFORM
+
+Stage 1 — Scope Definitivo
+
+Version 1.1
+
+Fecha: Noviembre 2025
+
+🎯 OBJETIVO DEL STAGE 1
+
+Construir el núcleo funcional que permita lanzar Vita con tres pilares críticos:
+
+Identidad verificada (KYC/KYB)
+
+Comercio (tiendas, reservas, pagos, checkout invisible)
+
+Descubrimiento (feed social + recomendación IA)
+
+Monetización inmediata para creadores (referidos)
+
+Este Stage debe ser usable, rápido, estable y sentar las bases técnicas de los siguientes módulos.
+
+1️⃣ MÓDULO DE IDENTIDAD – KYC/KYB DIDIT (OBLIGATORIO)
+
+Alcance
+
+Integración completa con Didit para verificación de:
+
+Clientes (KYC)
+
+Creadores de contenido (KYC obligatorio para ganar dinero)
+
+Empresas/Marcas (KYB obligatorio para recibir pagos)
+
+Flujo técnico
+
+Usuario crea cuenta → Estado: No Verificado
+
+Plataforma solicita verificación en Didit
+
+Didit responde vía webhook con:
+
+aprobado
+
+rechazado
+
+pendiente
+
+La plataforma actualiza user status.
+
+Tags visuales
+
+🔵 Usuario verificado
+
+🟢 Empresa verificada (favorita para búsquedas)
+
+🟣 Creador verificado
+
+Objetivo Stage 1
+
+Sin identidad = sin cobro, sin referidos y sin reservas.
+
+2️⃣ SISTEMA DE REFERIDOS PARA CREADORES – MONETIZACIÓN NATIVA
+
+Alcance
+
+Creadores podrán activar productos/servicios de marcas y ganar % automático por venta.
+
+Flujo
+
+Marca publica productos/servicios.
+
+Marca habilita productos para afiliación → selecciona % comisiones.
+
+Creador desde su perfil: "Activar para recomendar" → link o botón nativo.
+
+Usuario compra → checkout invisible → sistema detecta origen → distribuye comisiones.
+
+Requisitos técnicos
+
+Tracking por ID interno + device fingerprinting (no cookies).
+
+Split automático entre Marca / Creador / Vita.
+
+Panel simple con:
+
+ventas generadas
+
+comisión acumulada
+
+productos activos
+
+Objetivo Stage 1
+
+Que un creador pueda generar ingresos desde el minuto 1.
+
+3️⃣ SISTEMA DE RESERVAS AVANZADO — SUPERIOR A TODAS LAS PLATAFORMAS
+
+Componentes obligatorios
+
+Calendario avanzado por staff
+
+Disponibilidad por servicio
+
+Duración variable
+
+Días especiales / días cerrados
+
+Bloqueos inteligentes (descanso, horas pico)
+
+Pagos integrados (depósito o total)
+
+Confirmación automática
+
+Reagendamiento
+
+Cancelación con políticas personalizadas
+
+Sincronización externa (Google Calendar*)
+
+ (*Puede entrar en Stage 1.5 si es necesario, pero idealmente se incluye.)
+
+Innovaciones obligatorias
+
+Para superar a Calendly / Fresha / Booksy:
+
+🔥 Recomendación Inteligente de Horarios
+
+Algoritmo que sugiere la mejor hora disponible según:
+
+disponibilidad real
+
+horarios preferidos por el cliente
+
+horarios con más conversión
+
+horas con menor saturación del negocio
+
+🔥 Reservas con AI Chat Assistant
+
+Usuario puede escribir:
+
+"quiero un corte mañana a las 4"
+
+"quiero una limpieza facial para mujer hoy"
+
+ La IA ofrece las mejores opciones con un enlace directo para reservar.
+
+🔥 Vista operativa para negocios
+
+Vista semanal y diaria tipo "agenda profesional".
+
+Indicadores:
+
+cliente confirmado
+
+check-in
+
+necesita reagendar
+
+asistió / no asistió
+
+Objetivo Stage 1
+
+Poder reservar y pagar un servicio sin salir del perfil de la marca.
+
+4️⃣ INTEGRACIONES DE PAGO (CORE DEL ECOSISTEMA)
+
+Integraciones iniciales
+
+Stripe (MVP)
+
+Cregis (crypto + fiat)
+
+Funciones requeridas
+
+Pagos únicos
+
+Pagos de reserva (depósito)
+
+Pagos totales
+
+Split automático entre:
+
+Marca
+
+Creador afiliado
+
+Vita
+
+Objetivo Stage 1
+
+Que marcas y creadores puedan cobrar desde el primer día.
+
+5️⃣ FEED SOCIAL (SIN LIVES)
+
+Contenido permitido Stage 1
+
+Videos cortos estilo TikTok
+
+Imágenes
+
+Texto corto
+
+Captions automáticos IA (opcional)
+
+Features
+
+Scrolling vertical
+
+Algoritmo inicial:
+
+contenido de marcas cercanas
+
+contenido popular en ciudad
+
+contenido de marcas verificadas de alta calidad
+
+Like, Save, Share básico
+
+Objetivo Stage 1
+
+Descubrimiento y tráfico hacia tiendas, reservas y productos.
+
+6️⃣ MARKETPLACE BASADO EN UBICACIÓN
+
+Alcance
+
+Mostrar tiendas según ubicación del usuario:
+
+ciudad
+
+zona
+
+distancia (si es físico)
+
+Vista
+
+Grid simple tipo Uber Eats.
+
+Filtrar por:
+
+servicios
+
+comercios
+
+tipo de producto
+
+solo verificados
+
+promociones
+
+Objetivo Stage 1
+
+Que el usuario entre y vea de inmediato negocios relevantes según ubicación.
+
+7️⃣ PERFIL DE MARCAS Y CREADORES
+
+Componentes del perfil
+
+Foto de marca / portada
+
+Bio / descripción
+
+Productos / servicios
+
+Calendario de reservas
+
+Feed propio (publicaciones de esa marca)
+
+Botón "Reservar"
+
+Botón "Comprar"
+
+Botón "Recomendar" (para creadores)
+
+Reviews básicas
+
+Objetivo Stage 1
+
+Cada perfil debe ser un mini-ecosistema completo de venta.
+
+8️⃣ CHECKOUT INVISIBLE – ONE TAP
+
+Alcance
+
+Usuario ingresa tarjeta o método una vez.
+
+Compraventa ocurre sin:
+
+llenar formularios
+
+confirmaciones innecesarias
+
+procesos externos
+
+Requisitos técnicos
+
+Tokenización PCI
+
+3DS silencioso cuando aplique
+
+Fingerprinting del dispositivo
+
+Órdenes "background processing"
+
+Resultado
+
+Comprar en Vita toma 1 toque y 1 segundo.
+
+9️⃣ CHAT IA – RECOMENDACIÓN DE SERVICIOS Y TIENDAS
+
+Modelo inicial
+
+Puede ser ChatGPT o modelo propio.
+
+Funciones Stage 1
+
+"¿Qué me recomiendas en mi zona?"
+
+"Quiero uñas acrílicas para hoy".
+
+"¿Qué barbería tiene disponibilidad?"
+
+"Muéstrame salones que trabajan con reservas".
+
+Flujos
+
+IA responde con tarjetas de negocios.
+
+Tarjeta con:
+
+foto
+
+descripción
+
+distancia
+
+botón "Reservar ahora"
+
+botón "Abrir tienda"
+
+Objetivo Stage 1
+
+Hacer la búsqueda 10 veces más rápida que apps como Fresha, Instagram, Google Maps o TikTok.
+
+🎯 RESUMEN EJECUTIVO (ENTREGABLE PARA CTO)
+
+El Stage 1 de Vita debe entregar SÓLO:
+
+Identidad verificada (KYC/KYB)
+
+Tiendas + Marketplace por ubicación
+
+Sistema de reservas completo (nivel superior a la competencia)
+
+Feed social para tráfico y descubrimiento
+
+Integraciones de pago + wallets básicas
+
+Sistema de referidos para creadores
+
+Checkout invisible
+
+Chat IA para recomendación de negocios
+
+Perfiles de marcas, creadores y clientes
+
+Palomita de verificacion para marcas y creadores 
+
+Todo lo demás queda para Stage 2+.
+
