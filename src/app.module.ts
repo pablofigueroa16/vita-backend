@@ -10,6 +10,7 @@ import jwtConfig from './config/jwt.config';
 import integrationsConfig from './config/integrations.config';
 import { validate } from './config/env.validation';
 import { PrismaModule } from './common/database/prisma.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { PrismaModule } from './common/database/prisma.module';
       cache: true, // Cache de variables de entorno para mejor performance
     }),
     PrismaModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

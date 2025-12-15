@@ -4,6 +4,13 @@
 
 "Instalar pnpm" npm install -g pnpm
 
+## Comandos
+
+(tienes que estas en la carpeta prisma)
+
+pnpm prisma migrate dev --name init
+pnpm prisma generate
+
 ## ⚠️ IMPORTANTE: Crear archivo .env
 
 **DEBES crear un archivo `.env` en la raíz del proyecto antes de ejecutar `pnpm start:dev`**
