@@ -52,14 +52,12 @@ export class AuthController {
     return { message: 'Logout exitoso.' };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   async getProfile(@Req() req: AuthRequest): Promise<unknown> {
     return this.authService.getProfile(req.user.userId);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   @UseGuards(JwtAuthGuard)
   @Put('profile')
   async updateProfile(@Req() req: AuthRequest, @Body() dto: UpdateProfileDto): Promise<unknown> {
