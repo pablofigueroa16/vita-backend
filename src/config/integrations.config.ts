@@ -3,9 +3,11 @@ import { registerAs } from '@nestjs/config';
 export default registerAs('integrations', () => ({
   // DIDIT
   didit: {
-    apiUrl: process.env.DIDIT_API_URL || 'https://api.didit.me/v1',
+    // DIDIT v2 (default)
+    apiUrl: process.env.DIDIT_API_URL || 'https://verification.didit.me/v2',
     apiKey: process.env.DIDIT_API_KEY,
     webhookSecret: process.env.DIDIT_WEBHOOK_SECRET,
+    workflowId: process.env.WORKFLOW_ID,
   },
 
   // Futuras integraciones

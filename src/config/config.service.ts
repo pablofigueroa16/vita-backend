@@ -62,6 +62,10 @@ export class ConfigService {
     return this.configService.get<string>('integrations.didit.webhookSecret')!;
   }
 
+  get diditWorkflowId(): string {
+    return this.configService.getOrThrow<string>('integrations.didit.workflowId');
+  }
+
   // S3
   get s3DocumentsBucket(): string {
     return this.configService.get<string>('aws.s3.documentsBucket')!;

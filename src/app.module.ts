@@ -11,6 +11,7 @@ import integrationsConfig from './config/integrations.config';
 import { validate } from './config/env.validation';
 import { PrismaModule } from './common/database/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { KycModule } from './modules/kyc/kyc.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
     PrismaModule,
     AuthModule,
+    KycModule,
   ],
   controllers: [AppController],
   providers: [AppService],
