@@ -58,6 +58,9 @@ class EnvironmentVariables {
   @IsString()
   DIDIT_WEBHOOK_SECRET: string;
 
+  @IsString()
+  WORKFLOW_ID: string;
+
   // JWT
   @IsString()
   JWT_SECRET: string;

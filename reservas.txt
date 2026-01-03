@@ -1,0 +1,174 @@
+📌 REQUERIMIENTO OFICIAL PARA
+CTO
+Proyecto: VITA Platform
+Versión: MVP–Fase 1 (Servicios & Reservas)
+Owner: Victor Corvalán – CEO & Founder
+Objetivo del documento: Alinear alcance técnico, prioridades y arquitectura del MVP
+1. 🎯 OBJETIVO DEL MVP (CLARO Y NO
+NEGOCIABLE)
+Construir una plataforma social + comercial verificada donde:
+● Todos los usuarios y negocios estén 100% verificados (KYC/KYB)
+● Los servicios puedan:
+○ Publicarse
+○ Reservarse
+○ Pagarse
+○ Gestionarse
+● La confianza, trazabilidad y reputación sean el eje central
+● NO se incluyen productos físicos ni e-commerce tradicional en esta fase
+👉 El MVP debe ser escalable, modular y preparado para activar productos más adelante
+sin rehacer arquitectura.
+2. 🧩 ALCANCE FUNCIONAL – QUÉ SÍ ENTRA
+2.1 Identidad & Verificación (CORE)
+Obligatorio desde el día 1
+● Registro de usuarios:
+○ Personas (KYC)
+○ Empresas / profesionales (KYB)
+● Estados de verificación:
+○ No verificado
+○ En proceso
+○ Verificado
+● Badge visible en perfil
+● Bloqueo de funciones clave si no está verificado (ej. cobrar)
+La verificación es parte del producto, no un add-on.
+2.2 Tipos de Usuarios
+1. Usuario final (cliente)
+2. Proveedor de servicios
+○ Profesional
+○ Empresa / Marca
+3. Admin / Backoffice Vita
+2.3 Perfiles
+Cada usuario debe tener:
+● Perfil público tipo “tarjeta de confianza”
+● Datos clave:
+○ Foto
+○ Bio
+○ País
+○ Idioma
+○ Estado KYC/KYB
+● Para proveedores:
+○ Servicios publicados
+○ Calendario de disponibilidad
+○ Reseñas
+○ Métricas básicas (reservas, rating)
+3. 🛎️ SERVICIOS & RESERVAS (FOCO PRINCIPAL)
+3.1 Publicación de Servicios
+Un servicio debe permitir:
+● Título
+● Descripción
+● Categoría
+● Precio:
+○ Fijo
+○ Por hora
+○ Por sesión
+● Duración
+● Ubicación:
+○ Online
+○ Presencial
+● Reglas:
+○ Cancelación
+○ Reembolsos
+● Disponibilidad (calendario)
+3.2 Sistema de Reservas
+Funcionalidades mínimas:
+● Calendario por proveedor
+● Bloqueo automático de horarios
+● Confirmación de reserva
+● Estados:
+○ Pendiente
+○ Confirmada
+○ Completada
+○ Cancelada
+● Notificaciones (in-app + email)
+3.3 Pagos (Servicios)
+● Pago previo obligatorio para confirmar reserva
+● Split de pagos:
+○ % proveedor
+○ % Vita
+● Wallet interna (saldo)
+● Historial de transacciones
+● Preparado para:
+○ Stripe / PSP
+○ Escrow en fases futuras
+4. 🤖 IA (ENFOQUE REALISTA PARA MVP)
+4.1 IA de Soporte
+● Chat de ayuda básico
+● FAQs dinámicas
+● Soporte guiado para:
+○ Reservas
+○ Pagos
+○ Verificación
+4.2 IA de Negocio (Light)
+● Sugerencia de servicios al usuario
+● Insights básicos al proveedor:
+○ Mejor horario
+○ Servicios más reservados
+⚠️ NO machine learning complejo en esta fase.
+5. 💬 CHAT & COMUNICACIÓN
+● Chat 1 a 1:
+○ Cliente ↔ Proveedor
+● Reglas:
+○ Solo si hay reserva activa o previa
+● Historial persistente
+● Preparado para añadir IA asistente dentro del chat
+6. ⭐ REPUTACIÓN & CONFIANZA
+● Reviews post-servicio
+● Rating 1–5
+● Comentario opcional
+● Anti-fraude:
+○ Solo se puede valorar si hubo reserva real
+7. 🧑‍💼 BACKOFFICE / ADMIN
+Panel admin con:
+● Gestión de usuarios
+● Validación KYC/KYB
+● Gestión de servicios
+● Resolución de disputas
+● Métricas clave:
+○ GMV
+○ Reservas
+○ Usuarios activos
+○ Ingresos Vita
+8. 🚫 QUÉ NO ENTRA EN ESTA FASE (IMPORTANTE)
+❌ Tiendas de productos físicos
+❌ Logística / envíos
+❌ Catálogo tipo e-commerce
+❌ Afiliados
+❌ Cripto / tokens
+❌ Marketplace de productos
+Todo esto debe quedar previsto en arquitectura, pero NO desarrollado
+ahora.
+9. 🧱 ARQUITECTURA – LINEAMIENTOS
+● Modular / API-first
+● Escalable
+● Multi-idioma
+● Multi-país
+● Roles y permisos claros
+● Preparado para:
+○ Mobile App
+○ Web App
+○ Integraciones externas
+10. 🗺️ ROADMAP TÉCNICO (RESUMIDO)
+Fase 1 – MVP
+● KYC/KYB
+● Perfiles
+● Servicios
+● Reservas
+● Pagos
+● Chat
+● Reviews
+Fase 2
+● Productos
+● Marketplace híbrido
+● Escrow avanzado
+● IA comercial avanzada
+11. 🎯 CRITERIO DE ÉXITO DEL MVP
+El MVP es exitoso si:
+● Un proveedor verificado puede:
+○ Publicar un servicio
+○ Recibir una reserva
+○ Cobrar
+● Un usuario puede:
+○ Confiar
+○ Reservar
+○ Pagar
+○ Valorar
+● Todo ocurre dentro de Vita, sin fricción ni desconfianza
