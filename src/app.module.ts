@@ -12,6 +12,11 @@ import { validate } from './config/env.validation';
 import { PrismaModule } from './common/database/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { KycModule } from './modules/kyc/kyc.module';
+import { AvailabilityModule } from './availability/availability.module';
+import { CalendarModule } from './calendar/calendar.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ProvidersModule } from './providers/providers.module';
+import { ReservationsModule } from './reservations/reservations.module';
 
 @Module({
   imports: [
@@ -25,6 +30,11 @@ import { KycModule } from './modules/kyc/kyc.module';
     PrismaModule,
     AuthModule,
     KycModule,
+    ReservationsModule,
+    ProvidersModule,
+    AvailabilityModule,
+    CalendarModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

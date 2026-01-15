@@ -42,6 +42,9 @@ model User {
   transactions    Transaction[]
   payoutRequests  PayoutRequest[]
 
+  reservations Reservation[]
+
+
   @@index([email])
   @@index([cognitoUserId])
   @@index([role])
@@ -406,4 +409,48 @@ enum PayoutStatus {
   PAID // Pagado
   REJECTED // Rechazado
   CANCELLED // Cancelado por el creador
+}
+
+// ============================================
+// SISTEMA DE RESERVAS
+// ============================================
+
+model Reservation {
+  id         String @id @default(uuid())
+
+  // Relación con el proveedor (puede ser USER o BUSINESS)
+  providerId String
+  provider   User   @relation(fields: [providerId], references: [id])
+
+  // DATOS DEL CLIENTE
+  customerName  String
+  customerEmail String
+
+  // Datos de la reserva
+  date       DateTime
+  startTime  String // "10:00"
+  endTime    String // "11:00"
+
+  // Estado de la reserva
+  status ReservationStatus @default(CONFIRMED)
+
+  // Metadata adicional (opcional)
+  notes    String?
+  metadata Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([providerId])
+  @@index([date])
+  @@index([status])
+  @@map("reservations")
+}
+
+enum ReservationStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  PENDING
 }
