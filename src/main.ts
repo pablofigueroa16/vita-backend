@@ -6,10 +6,17 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Necesario para validar firmas HMAC de webhooks (DIDIT) usando el body crudo.
+  // ✅ CORS (FRONT EN 3001 → BACK EN 3000)
+  app.enableCors({
+    origin: 'http://localhost:3001',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
+
+  // Necesario para validar firmas HMAC de webhooks (DIDIT)
   app.use(
     json({
-      // `verify` recibe IncomingMessage; usamos `any` para adjuntar rawBody sin pelear con tipos.
       verify: (req: any, _res, buf) => {
         req.rawBody = buf;
       },
@@ -25,6 +32,7 @@ async function bootstrap() {
     }),
   );
 
+  // ❌ NO se toca el puerto
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
